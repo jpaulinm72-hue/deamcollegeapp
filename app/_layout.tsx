@@ -1,4 +1,3 @@
-// template
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -7,21 +6,74 @@ import {
   useFonts,
 } from "@expo-google-fonts/inter";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/query-client";
+import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { DataProvider } from "@/lib/data-context";
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) return null;
+
   return (
-    <Stack screenOptions={{ headerBackTitle: "Back" }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    <Stack screenOptions={{ headerShown: false }}>
+      {!isAuthenticated ? (
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+      ) : (
+        <>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="student/[id]"
+            options={{
+              headerShown: false,
+              presentation: "card",
+            }}
+          />
+          <Stack.Screen
+            name="student-form"
+            options={{
+              presentation: "modal",
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="teacher-form"
+            options={{
+              presentation: "modal",
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="class-form"
+            options={{
+              presentation: "modal",
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="grade-form"
+            options={{
+              presentation: "modal",
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="payment-form"
+            options={{
+              presentation: "modal",
+              headerShown: false,
+            }}
+          />
+        </>
+      )}
     </Stack>
   );
 }
@@ -45,11 +97,15 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <GestureHandlerRootView>
-          <KeyboardProvider>
-            <RootLayoutNav />
-          </KeyboardProvider>
-        </GestureHandlerRootView>
+        <AuthProvider>
+          <DataProvider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <KeyboardProvider>
+                <RootLayoutNav />
+              </KeyboardProvider>
+            </GestureHandlerRootView>
+          </DataProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );
