@@ -1,0 +1,121 @@
+Act as a senior full-stack developer.
+
+Create a complete School Administration Management Application that works on both Mobile and Web.
+
+Requirements:
+
+The application will be used ONLY by school administration staff. 
+There are no student or teacher user accounts. Only admin users manage everything.
+
+Technology stack:
+- Frontend: React Native with Expo (for mobile)
+- Web version: React
+- Backend: Firebase
+- Database: Firestore
+- Authentication: Firebase Authentication (Admin login only)
+
+Main Features:
+
+1. Authentication
+- Admin login
+- Secure authentication
+- Logout functionality
+
+2. Dashboard
+- Total number of students
+- Total number of teachers
+- Total classes
+- Payment statistics
+- Quick overview cards
+
+3. Student Management
+Admin can:
+- Add student
+- Edit student
+- Delete student
+- View student profile
+
+Student fields:
+- First name
+- Last name
+- Date of birth
+- Class
+- Phone
+- Address
+- Enrollment date
+
+4. Teacher Management
+Admin can:
+- Add teacher
+- Edit teacher
+- Delete teacher
+
+Teacher fields:
+- First name
+- Last name
+- Subject
+- Phone
+- Email
+
+5. Class Management
+Admin can:
+- Create classes
+- Assign teachers
+- Assign students
+- View class list
+
+Class fields:
+- Class name
+- Level
+- Assigned teacher
+- Student list
+
+6. Grades Management
+Admin can:
+- Add grades
+- Update grades
+- View grades by student
+
+Grade fields:
+- Student
+- Subject
+- Grade
+- Exam date
+
+7. Payment Management
+Admin can:
+- Record payments
+- View payment history
+- Mark paid/unpaid
+
+Payment fields:
+- Student
+- Amount
+- Payment date
+- Status
+- Month
+
+8. Additional features
+- Search students
+- Filter by class
+- Responsive UI for mobile and web
+- Clean modern dashboard design
+
+Database structure:
+Provide Firestore collections for:
+- admins
+- students
+- teachers
+- classes
+- grades
+- payments
+
+Also provide:
+- Project folder structure
+- Example API logic
+- UI screen structure
+- Example React Native components
+- Firebase configuration
+
+The code should be clean, scalable, and ready to run.
+Explain setup steps after generating the code.
