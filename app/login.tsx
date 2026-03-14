@@ -12,18 +12,18 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { useAuth } from "@/lib/auth-context";
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
@@ -34,16 +34,29 @@ export default function LoginScreen() {
     setError("");
     setIsLoading(true);
     try {
-      const result = await login(email, password);
+      const result = await login(email.trim(), password);
       if (result.success) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        router.replace("/(tabs)");
       } else {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        setError(result.error || "Login failed");
+        setError(result.error || "Invalid email or password");
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError("");
+    setIsGoogleLoading(true);
+    try {
+      const result = await loginWithGoogle();
+      if (!result.success && result.error && result.error !== "Google sign-in was cancelled") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        setError(result.error);
+      }
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
@@ -57,7 +70,7 @@ export default function LoginScreen() {
         contentContainerStyle={[
           styles.container,
           {
-            paddingTop: insets.top + (Platform.OS === "web" ? 67 : 0),
+            paddingTop: insets.top + (Platform.OS === "web" ? 67 : 20),
             paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 20),
           },
         ]}
@@ -83,23 +96,55 @@ export default function LoginScreen() {
             </View>
           ) : null}
 
+          {/* Google Sign-In */}
+          <Pressable
+            style={({ pressed }) => [
+              styles.googleButton,
+              { opacity: pressed || isGoogleLoading ? 0.8 : 1 },
+            ]}
+            onPress={handleGoogleLogin}
+            disabled={isGoogleLoading || isLoading}
+            testID="google-signin-btn"
+          >
+            {isGoogleLoading ? (
+              <ActivityIndicator color={Colors.text} />
+            ) : (
+              <>
+                <View style={styles.googleIconBox}>
+                  <Text style={styles.googleG}>G</Text>
+                </View>
+                <Text style={styles.googleButtonText}>Continue with Google</Text>
+              </>
+            )}
+          </Pressable>
+
+          {/* Divider */}
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or sign in with email</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* Email */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Email Address</Text>
             <View style={styles.inputWrapper}>
               <Feather name="mail" size={18} color={Colors.muted} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="admin@school.com"
+                placeholder="Enter your email"
                 placeholderTextColor={Colors.muted}
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
                 keyboardType="email-address"
                 autoComplete="email"
+                testID="email-input"
               />
             </View>
           </View>
 
+          {/* Password */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Password</Text>
             <View style={styles.inputWrapper}>
@@ -112,6 +157,7 @@ export default function LoginScreen() {
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
                 autoComplete="password"
+                testID="password-input"
               />
               <Pressable onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
                 <Feather name={showPassword ? "eye-off" : "eye"} size={18} color={Colors.muted} />
@@ -125,7 +171,8 @@ export default function LoginScreen() {
               { opacity: pressed || isLoading ? 0.85 : 1 },
             ]}
             onPress={handleLogin}
-            disabled={isLoading}
+            disabled={isLoading || isGoogleLoading}
+            testID="signin-btn"
           >
             {isLoading ? (
               <ActivityIndicator color={Colors.surface} />
@@ -136,11 +183,6 @@ export default function LoginScreen() {
               </>
             )}
           </Pressable>
-
-          <View style={styles.hint}>
-            <Feather name="info" size={14} color={Colors.muted} />
-            <Text style={styles.hintText}>Demo: admin@school.com / admin123</Text>
-          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -184,7 +226,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderRadius: 24,
     padding: 28,
-    gap: 20,
+    gap: 18,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
@@ -200,7 +242,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: "Inter_400Regular",
     color: Colors.textSecondary,
-    marginTop: -12,
+    marginTop: -10,
   },
   errorBox: {
     flexDirection: "row",
@@ -215,6 +257,56 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_500Medium",
     color: Colors.error,
     flex: 1,
+  },
+  googleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    backgroundColor: Colors.surface,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    borderRadius: 14,
+    paddingVertical: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  googleIconBox: {
+    width: 22,
+    height: 22,
+    borderRadius: 4,
+    backgroundColor: "#4285F4",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  googleG: {
+    color: "#fff",
+    fontSize: 13,
+    fontFamily: "Inter_700Bold",
+    lineHeight: 16,
+  },
+  googleButtonText: {
+    fontSize: 15,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.text,
+  },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.border,
+  },
+  dividerText: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+    color: Colors.muted,
   },
   inputGroup: { gap: 6 },
   label: {
@@ -257,16 +349,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "Inter_600SemiBold",
     color: Colors.surface,
-  },
-  hint: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-  },
-  hintText: {
-    fontSize: 13,
-    fontFamily: "Inter_400Regular",
-    color: Colors.muted,
   },
 });
