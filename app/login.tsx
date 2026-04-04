@@ -22,7 +22,7 @@ import { useAuth } from "@/lib/auth-context";
 export default function LoginScreen() {
   const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { login, signUp, loginWithGoogle, signUpWithGoogle, isAuthenticated } = useAuth();
+  const { login, signUp, isAuthenticated } = useAuth();
   
   const toggleLanguage = async () => {
     const newLang = i18n.language === "en" ? "fr" : "en";
@@ -41,7 +41,6 @@ export default function LoginScreen() {
   const [username, setUsername] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -93,19 +92,7 @@ export default function LoginScreen() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setError("");
-    setIsGoogleLoading(true);
-    try {
-      const result = isLogin ? await loginWithGoogle() : await signUpWithGoogle();
-      if (!result.success && result.error && result.error !== "Google sign-in was cancelled") {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        setError(result.error);
-      }
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  };
+
 
   return (
     <KeyboardAvoidingView
@@ -171,38 +158,7 @@ export default function LoginScreen() {
             </View>
           ) : null}
 
-          {/* Google Sign-In */}
-          <Pressable
-            style={({ pressed }) => [
-              styles.googleButton,
-              { opacity: pressed || isGoogleLoading ? 0.8 : 1 },
-            ]}
-            onPress={handleGoogleLogin}
-            disabled={isGoogleLoading || isLoading}
-            testID="google-signin-btn"
-          >
-            {isGoogleLoading ? (
-              <ActivityIndicator color={Colors.text} />
-            ) : (
-              <>
-                <View style={styles.googleIconBox}>
-                  <Text style={styles.googleG}>G</Text>
-                </View>
-                <Text style={styles.googleButtonText}>
-                  {isLogin ? t("google_continue") : t("google_signup")}
-                </Text>
-              </>
-            )}
-          </Pressable>
 
-          {/* Divider */}
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>
-              {t("or_with_email", { action: isLogin ? t("sign_in").toLowerCase() : t("sign_up").toLowerCase() })}
-            </Text>
-            <View style={styles.dividerLine} />
-          </View>
 
           {/* Sign Up Fields */}
           {!isLogin && (
@@ -298,7 +254,7 @@ export default function LoginScreen() {
               { opacity: pressed || isLoading ? 0.85 : 1 },
             ]}
             onPress={handleLogin}
-            disabled={isLoading || isGoogleLoading}
+            disabled={isLoading}
             testID="signin-btn"
           >
             {isLoading ? (
@@ -400,56 +356,8 @@ const styles = StyleSheet.create({
     color: Colors.error,
     flex: 1,
   },
-  googleButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-    backgroundColor: Colors.surface,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderRadius: 14,
-    paddingVertical: 14,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  googleIconBox: {
-    width: 22,
-    height: 22,
-    borderRadius: 4,
-    backgroundColor: "#4285F4",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  googleG: {
-    color: "#fff",
-    fontSize: 13,
-    fontFamily: "Inter_700Bold",
-    lineHeight: 16,
-  },
-  googleButtonText: {
-    fontSize: 15,
-    fontFamily: "Inter_600SemiBold",
-    color: Colors.text,
-  },
-  divider: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: Colors.border,
-  },
-  dividerText: {
-    fontSize: 12,
-    fontFamily: "Inter_400Regular",
-    color: Colors.muted,
-  },
+
+
   inputGroup: { gap: 6 },
   label: {
     fontSize: 13,

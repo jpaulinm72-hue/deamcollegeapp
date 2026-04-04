@@ -14,8 +14,6 @@ interface AuthContextType {
   session: Session | null;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signUp: (email: string, password: string, userData: { firstName: string, lastName: string, username: string }) => Promise<{ success: boolean; error?: string }>;
-  loginWithGoogle: () => Promise<{ success: boolean; error?: string }>;
-  signUpWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
 }
 
@@ -66,55 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { success: true };
   };
 
-  const loginWithGoogle = async () => {
-    try {
-      let redirectTo: string;
-      if (Platform.OS === "web") {
-        redirectTo = (typeof window !== "undefined" ? window.location.origin : "") + "/auth-callback";
-      } else {
-        // Use the current Expo Go URL or standalone app scheme
-        redirectTo = Linking.createURL("/auth-callback");
-      }
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo,
-          skipBrowserRedirect: true,
-          queryParams: {
-            prompt: "select_account",
-          },
-        },
-      });
-
-      if (error) return { success: false, error: error.message };
-      if (!data?.url) return { success: false, error: "No OAuth URL returned" };
-
-      if (Platform.OS === "web") {
-        if (typeof window !== "undefined") window.location.href = data.url;
-        return { success: true };
-      }
-
-      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-
-      if (result.type === "success" && result.url) {
-        const { data: { session: newSession }, error: exchangeError } = await supabase.auth.exchangeCodeForSession(result.url);
-        if (exchangeError) return { success: false, error: exchangeError.message };
-        if (newSession) setSession(newSession);
-        return { success: true };
-      }
-
-      return { success: false, error: "Google sign-in was cancelled" };
-    } catch (e: any) {
-      return { success: false, error: e?.message || "Google sign-in failed" };
-    }
-  };
-
-  const signUpWithGoogle = async () => {
-    // For Supabase, signInWithOAuth handles both login and signup.
-    // We can use the same implementation or customize it (e.g., prompt='consent' to ensure a new user experience).
-    return loginWithGoogle();
-  };
 
   const logout = async () => {
     console.log("Logout triggered");
@@ -163,8 +113,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       login,
       signUp,
-      loginWithGoogle,
-      signUpWithGoogle,
       logout,
     }}>
       {children}
