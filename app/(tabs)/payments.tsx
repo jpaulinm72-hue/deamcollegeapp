@@ -14,12 +14,14 @@ import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { useData, Payment } from "@/lib/data-context";
+import { useAuth } from "@/lib/auth-context";
 
 type FilterStatus = "all" | "paid" | "unpaid";
 
 export default function PaymentsScreen() {
   const insets = useSafeAreaInsets();
   const { payments, students, updatePayment, deletePayment } = useData();
+  const { logout } = useAuth();
   const [filter, setFilter] = useState<FilterStatus>("all");
 
   const filtered = useMemo(() => {
@@ -74,12 +76,20 @@ export default function PaymentsScreen() {
             <Text style={styles.title}>Payments</Text>
             <Text style={styles.subtitle}>{payments.length} total records</Text>
           </View>
-          <Pressable
-            style={({ pressed }) => [styles.addBtn, { opacity: pressed ? 0.8 : 1 }]}
-            onPress={() => router.push("/payment-form")}
-          >
-            <Feather name="plus" size={20} color={Colors.surface} />
-          </Pressable>
+          <View style={styles.headerRight}>
+            <Pressable
+              style={({ pressed }) => [styles.logoutBtn, { opacity: pressed ? 0.7 : 1, marginRight: 8 }]}
+              onPress={logout}
+            >
+              <Feather name="log-out" size={18} color={Colors.textSecondary} />
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [styles.addBtn, { opacity: pressed ? 0.8 : 1 }]}
+              onPress={() => router.push("/payment-form")}
+            >
+              <Feather name="plus" size={20} color={Colors.surface} />
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.summaryRow}>
@@ -209,6 +219,7 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 28, fontFamily: "Inter_700Bold", color: Colors.text },
   subtitle: { fontSize: 14, fontFamily: "Inter_400Regular", color: Colors.textSecondary, marginTop: 2 },
+  headerRight: { flexDirection: "row", alignItems: "center" },
   addBtn: {
     width: 44,
     height: 44,
@@ -216,6 +227,16 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     alignItems: "center",
     justifyContent: "center",
+  },
+  logoutBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: Colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   summaryRow: { flexDirection: "row", gap: 12 },
   summaryCard: {

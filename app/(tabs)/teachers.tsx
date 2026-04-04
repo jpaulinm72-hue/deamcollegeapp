@@ -15,6 +15,7 @@ import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { useData } from "@/lib/data-context";
+import { useAuth } from "@/lib/auth-context";
 
 const SUBJECT_COLORS: Record<string, string> = {
   Mathematics: "#3B82F6",
@@ -36,6 +37,7 @@ function getSubjectColor(subject: string): string {
 export default function TeachersScreen() {
   const insets = useSafeAreaInsets();
   const { teachers, classes, deleteTeacher } = useData();
+  const { logout } = useAuth();
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
@@ -81,12 +83,20 @@ export default function TeachersScreen() {
             <Text style={styles.title}>Teachers</Text>
             <Text style={styles.subtitle}>{teachers.length} staff members</Text>
           </View>
-          <Pressable
-            style={({ pressed }) => [styles.addBtn, { opacity: pressed ? 0.8 : 1 }]}
-            onPress={() => router.push("/teacher-form")}
-          >
-            <Feather name="plus" size={20} color={Colors.surface} />
-          </Pressable>
+          <View style={styles.headerRight}>
+            <Pressable
+              style={({ pressed }) => [styles.logoutBtn, { opacity: pressed ? 0.7 : 1, marginRight: 8 }]}
+              onPress={logout}
+            >
+              <Feather name="log-out" size={18} color={Colors.textSecondary} />
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [styles.addBtn, { opacity: pressed ? 0.8 : 1 }]}
+              onPress={() => router.push("/teacher-form")}
+            >
+              <Feather name="plus" size={20} color={Colors.surface} />
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.searchBar}>
@@ -185,6 +195,7 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 28, fontFamily: "Inter_700Bold", color: Colors.text },
   subtitle: { fontSize: 14, fontFamily: "Inter_400Regular", color: Colors.textSecondary, marginTop: 2 },
+  headerRight: { flexDirection: "row", alignItems: "center" },
   addBtn: {
     width: 44,
     height: 44,
@@ -192,6 +203,16 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     alignItems: "center",
     justifyContent: "center",
+  },
+  logoutBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: Colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   searchBar: {
     flexDirection: "row",

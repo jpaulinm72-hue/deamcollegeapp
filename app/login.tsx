@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
   Text,
@@ -14,32 +16,77 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
+import { Redirect } from "expo-router";
 import { useAuth } from "@/lib/auth-context";
 
 export default function LoginScreen() {
+  const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { login, loginWithGoogle } = useAuth();
+  const { login, signUp, loginWithGoogle, signUpWithGoogle, isAuthenticated } = useAuth();
+  
+  const toggleLanguage = async () => {
+    const newLang = i18n.language === "en" ? "fr" : "en";
+    await i18n.changeLanguage(newLang);
+    await AsyncStorage.setItem("user-language", newLang);
+  };
+
+  if (isAuthenticated) {
+    return <Redirect href="/(tabs)" />;
+  }
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
   const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      setError("Please fill in all fields");
-      return;
+    if (isLogin) {
+      if (!email.trim() || !password.trim()) {
+        setError("Please fill in all fields");
+        return;
+      }
+    } else {
+      if (!email.trim() || !password.trim() || !firstName.trim() || !lastName.trim() || !username.trim()) {
+        setError("Please fill in all fields");
+        return;
+      }
     }
     setError("");
+    setMessage("");
     setIsLoading(true);
     try {
-      const result = await login(email.trim(), password);
-      if (result.success) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (isLogin) {
+        const result = await login(email.trim(), password);
+        if (result.success) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        } else {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          setError(result.error || "Invalid email or password");
+        }
       } else {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        setError(result.error || "Invalid email or password");
+        const result = await signUp(email.trim(), password, {
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          username: username.trim()
+        });
+        if (result.success) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          setMessage("Check your email for the confirmation link!");
+          setFirstName("");
+          setLastName("");
+          setUsername("");
+          setEmail("");
+          setPassword("");
+        } else {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          setError(result.error || "Could not sign up");
+        }
       }
     } finally {
       setIsLoading(false);
@@ -50,7 +97,7 @@ export default function LoginScreen() {
     setError("");
     setIsGoogleLoading(true);
     try {
-      const result = await loginWithGoogle();
+      const result = isLogin ? await loginWithGoogle() : await signUpWithGoogle();
       if (!result.success && result.error && result.error !== "Google sign-in was cancelled") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         setError(result.error);
@@ -78,21 +125,49 @@ export default function LoginScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
+          <Pressable 
+            onPress={toggleLanguage}
+            style={({ pressed }) => [
+              { 
+                position: "absolute", 
+                right: 0, 
+                top: 0, 
+                backgroundColor: "rgba(255,255,255,0.1)",
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 8,
+                opacity: pressed ? 0.7 : 1
+              }
+            ]}
+          >
+            <Text style={{ color: Colors.surface, fontFamily: "Inter_600SemiBold", fontSize: 13 }}>
+              {i18n.language === "en" ? "FR" : "EN"}
+            </Text>
+          </Pressable>
           <View style={styles.iconContainer}>
             <Feather name="book-open" size={40} color={Colors.surface} />
           </View>
-          <Text style={styles.appName}>SchoolAdmin</Text>
-          <Text style={styles.subtitle}>Administration Portal</Text>
+          <Text style={styles.appName}>Dream College</Text>
+          <Text style={styles.subtitle}>Educational Management</Text>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Welcome back</Text>
-          <Text style={styles.cardSubtitle}>Sign in to your admin account</Text>
+          <Text style={styles.cardTitle}>{isLogin ? t("welcome_back") : t("create_account")}</Text>
+          <Text style={styles.cardSubtitle}>
+            {isLogin ? t("sign_in_subtitle") : t("sign_up_subtitle")}
+          </Text>
 
           {error ? (
             <View style={styles.errorBox}>
               <Feather name="alert-circle" size={16} color={Colors.error} />
               <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : null}
+
+          {message ? (
+            <View style={[styles.errorBox, { backgroundColor: Colors.successLight }]}>
+              <Feather name="check-circle" size={16} color={Colors.success} />
+              <Text style={[styles.errorText, { color: Colors.success }]}>{message}</Text>
             </View>
           ) : null}
 
@@ -113,7 +188,9 @@ export default function LoginScreen() {
                 <View style={styles.googleIconBox}>
                   <Text style={styles.googleG}>G</Text>
                 </View>
-                <Text style={styles.googleButtonText}>Continue with Google</Text>
+                <Text style={styles.googleButtonText}>
+                  {isLogin ? t("google_continue") : t("google_signup")}
+                </Text>
               </>
             )}
           </Pressable>
@@ -121,13 +198,63 @@ export default function LoginScreen() {
           {/* Divider */}
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or sign in with email</Text>
+            <Text style={styles.dividerText}>
+              {t("or_with_email", { action: isLogin ? t("sign_in").toLowerCase() : t("sign_up").toLowerCase() })}
+            </Text>
             <View style={styles.dividerLine} />
           </View>
 
+          {/* Sign Up Fields */}
+          {!isLogin && (
+            <>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t("first_name")}</Text>
+                <View style={styles.inputWrapper}>
+                  <Feather name="user" size={18} color={Colors.muted} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter your first name"
+                    placeholderTextColor={Colors.muted}
+                    value={firstName}
+                    onChangeText={setFirstName}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t("last_name")}</Text>
+                <View style={styles.inputWrapper}>
+                  <Feather name="user" size={18} color={Colors.muted} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter your last name"
+                    placeholderTextColor={Colors.muted}
+                    value={lastName}
+                    onChangeText={setLastName}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t("username")}</Text>
+                <View style={styles.inputWrapper}>
+                  <Feather name="at-sign" size={18} color={Colors.muted} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Choose a username"
+                    placeholderTextColor={Colors.muted}
+                    value={username}
+                    onChangeText={setUsername}
+                    autoCapitalize="none"
+                  />
+                </View>
+              </View>
+            </>
+          )}
+
           {/* Email */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email Address</Text>
+            <Text style={styles.label}>{t("email_address")}</Text>
             <View style={styles.inputWrapper}>
               <Feather name="mail" size={18} color={Colors.muted} style={styles.inputIcon} />
               <TextInput
@@ -146,7 +273,7 @@ export default function LoginScreen() {
 
           {/* Password */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Password</Text>
+            <Text style={styles.label}>{t("password")}</Text>
             <View style={styles.inputWrapper}>
               <Feather name="lock" size={18} color={Colors.muted} style={styles.inputIcon} />
               <TextInput
@@ -178,11 +305,26 @@ export default function LoginScreen() {
               <ActivityIndicator color={Colors.surface} />
             ) : (
               <>
-                <Text style={styles.loginButtonText}>Sign In</Text>
+                <Text style={styles.loginButtonText}>{isLogin ? t("sign_in") : t("sign_up")}</Text>
                 <Feather name="arrow-right" size={18} color={Colors.surface} />
               </>
             )}
           </Pressable>
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              {isLogin ? t("no_account") : t("has_account")}{" "}
+            </Text>
+            <Pressable onPress={() => {
+              setIsLogin(!isLogin);
+              setError("");
+              setMessage("");
+            }}>
+              <Text style={styles.footerLink}>
+                {isLogin ? t("sign_up") : t("sign_in")}
+              </Text>
+            </Pressable>
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -349,5 +491,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "Inter_600SemiBold",
     color: Colors.surface,
+  },
+  footer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 8,
+  },
+  footerText: {
+    fontSize: 14,
+    fontFamily: "Inter_400Regular",
+    color: Colors.textSecondary,
+  },
+  footerLink: {
+    fontSize: 14,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.primary,
   },
 });

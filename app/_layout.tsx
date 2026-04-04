@@ -15,6 +15,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/query-client";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { DataProvider } from "@/lib/data-context";
+import "@/lib/i18n";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -25,58 +26,62 @@ function RootLayoutNav() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      {!isAuthenticated ? (
-        <>
-          <Stack.Screen name="login" options={{ headerShown: false }} />
-          <Stack.Screen name="auth-callback" options={{ headerShown: false }} />
-        </>
-      ) : (
-        <>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="auth-callback" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="student/[id]"
-            options={{
-              headerShown: false,
-              presentation: "card",
-            }}
-          />
-          <Stack.Screen
-            name="student-form"
-            options={{
-              presentation: "modal",
-              headerShown: false,
-            }}
-          />
-          <Stack.Screen
-            name="teacher-form"
-            options={{
-              presentation: "modal",
-              headerShown: false,
-            }}
-          />
-          <Stack.Screen
-            name="class-form"
-            options={{
-              presentation: "modal",
-              headerShown: false,
-            }}
-          />
-          <Stack.Screen
-            name="grade-form"
-            options={{
-              presentation: "modal",
-              headerShown: false,
-            }}
-          />
-          <Stack.Screen
-            name="payment-form"
-            options={{
-              presentation: "modal",
-              headerShown: false,
-            }}
-          />
-        </>
+      {!isAuthenticated && <Stack.Screen name="login" options={{ headerShown: false }} />}
+      {isAuthenticated && <Stack.Screen name="(tabs)" options={{ headerShown: false }} />}
+      <Stack.Screen name="auth-callback" options={{ headerShown: false }} />
+      {isAuthenticated && (
+        <Stack.Screen
+          name="student/[id]"
+          options={{
+            headerShown: false,
+            presentation: "card",
+          }}
+        />
+      )}
+      {isAuthenticated && (
+        <Stack.Screen
+          name="student-form"
+          options={{
+            presentation: "modal",
+            headerShown: false,
+          }}
+        />
+      )}
+      {isAuthenticated && (
+        <Stack.Screen
+          name="teacher-form"
+          options={{
+            presentation: "modal",
+            headerShown: false,
+          }}
+        />
+      )}
+      {isAuthenticated && (
+        <Stack.Screen
+          name="class-form"
+          options={{
+            presentation: "modal",
+            headerShown: false,
+          }}
+        />
+      )}
+      {isAuthenticated && (
+        <Stack.Screen
+          name="grade-form"
+          options={{
+            presentation: "modal",
+            headerShown: false,
+          }}
+        />
+      )}
+      {isAuthenticated && (
+        <Stack.Screen
+          name="payment-form"
+          options={{
+            presentation: "modal",
+            headerShown: false,
+          }}
+        />
       )}
     </Stack>
   );

@@ -34,8 +34,27 @@ export default function TeacherFormScreen() {
   const [subject, setSubject] = useState(existing?.subject || "");
   const [phone, setPhone] = useState(existing?.phone || "");
   const [email, setEmail] = useState(existing?.email || "");
+  const [subjectsList, setSubjectsList] = useState(() => {
+    const list = [...SUBJECTS];
+    if (existing?.subject && !list.includes(existing.subject)) {
+      list.push(existing.subject);
+    }
+    return list;
+  });
+  const [customSubject, setCustomSubject] = useState("");
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const handleAddCustomSubject = () => {
+    if (customSubject.trim()) {
+      const newSubject = customSubject.trim();
+      if (!subjectsList.includes(newSubject)) {
+        setSubjectsList([...subjectsList, newSubject]);
+      }
+      setSubject(newSubject);
+      setCustomSubject("");
+    }
+  };
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -120,7 +139,7 @@ export default function TeacherFormScreen() {
           <Text style={styles.label}>Subject</Text>
           {errors.subject ? <Text style={styles.errorText}>{errors.subject}</Text> : null}
           <View style={styles.subjectGrid}>
-            {SUBJECTS.map(s => (
+            {subjectsList.map(s => (
               <Pressable
                 key={s}
                 style={[styles.subjectChip, subject === s && styles.subjectChipActive]}
@@ -131,6 +150,23 @@ export default function TeacherFormScreen() {
                 </Text>
               </Pressable>
             ))}
+          </View>
+          
+          <View style={styles.addCustomContainer}>
+            <TextInput
+              style={styles.customInput}
+              value={customSubject}
+              onChangeText={setCustomSubject}
+              placeholder="Add other subject..."
+              placeholderTextColor={Colors.muted}
+            />
+            <Pressable 
+              style={[styles.addBtn, !customSubject.trim() && { opacity: 0.5 }]} 
+              onPress={handleAddCustomSubject}
+              disabled={!customSubject.trim()}
+            >
+              <Feather name="plus" size={18} color={Colors.surface} />
+            </Pressable>
           </View>
         </View>
 
@@ -227,4 +263,30 @@ const styles = StyleSheet.create({
   subjectChipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   subjectChipText: { fontSize: 13, fontFamily: "Inter_500Medium", color: Colors.textSecondary },
   subjectChipTextActive: { color: Colors.surface },
+  addCustomContainer: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 8,
+    alignItems: "center",
+  },
+  customInput: {
+    flex: 1,
+    backgroundColor: Colors.background,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 14,
+    fontFamily: "Inter_400Regular",
+    color: Colors.text,
+  },
+  addBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: Colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });

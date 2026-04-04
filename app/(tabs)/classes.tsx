@@ -14,6 +14,7 @@ import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { useData } from "@/lib/data-context";
+import { useAuth } from "@/lib/auth-context";
 
 const LEVEL_COLORS: Record<string, string> = {
   "Grade 1": "#3B82F6",
@@ -37,6 +38,7 @@ function getLevelColor(level: string): string {
 export default function ClassesScreen() {
   const insets = useSafeAreaInsets();
   const { classes, teachers, students, deleteClass } = useData();
+  const { logout } = useAuth();
 
   const handleDelete = (id: string, name: string) => {
     Alert.alert("Delete Class", `Delete ${name}?`, [
@@ -73,12 +75,20 @@ export default function ClassesScreen() {
             <Text style={styles.title}>Classes</Text>
             <Text style={styles.subtitle}>{classes.length} active classes</Text>
           </View>
-          <Pressable
-            style={({ pressed }) => [styles.addBtn, { opacity: pressed ? 0.8 : 1 }]}
-            onPress={() => router.push("/class-form")}
-          >
-            <Feather name="plus" size={20} color={Colors.surface} />
-          </Pressable>
+          <View style={styles.headerRight}>
+            <Pressable
+              style={({ pressed }) => [styles.logoutBtn, { opacity: pressed ? 0.7 : 1, marginRight: 8 }]}
+              onPress={logout}
+            >
+              <Feather name="log-out" size={18} color={Colors.textSecondary} />
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [styles.addBtn, { opacity: pressed ? 0.8 : 1 }]}
+              onPress={() => router.push("/class-form")}
+            >
+              <Feather name="plus" size={20} color={Colors.surface} />
+            </Pressable>
+          </View>
         </View>
 
         {classes.length === 0 ? (
@@ -170,6 +180,7 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 28, fontFamily: "Inter_700Bold", color: Colors.text },
   subtitle: { fontSize: 14, fontFamily: "Inter_400Regular", color: Colors.textSecondary, marginTop: 2 },
+  headerRight: { flexDirection: "row", alignItems: "center" },
   addBtn: {
     width: 44,
     height: 44,
@@ -177,6 +188,16 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     alignItems: "center",
     justifyContent: "center",
+  },
+  logoutBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: Colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   empty: { alignItems: "center", paddingTop: 60, gap: 12 },
   emptyTitle: { fontSize: 18, fontFamily: "Inter_600SemiBold", color: Colors.text },

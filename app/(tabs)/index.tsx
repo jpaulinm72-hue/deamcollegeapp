@@ -11,6 +11,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import Colors from "@/constants/colors";
+import { useTranslation } from "react-i18next";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useData } from "@/lib/data-context";
 import { useAuth } from "@/lib/auth-context";
 
@@ -60,9 +62,18 @@ function QuickAction({ label, icon, color, onPress }: QuickActionProps) {
 }
 
 export default function DashboardScreen() {
+  const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
   const { students, teachers, classes, payments } = useData();
-  const { logout } = useAuth();
+  const { logout, session } = useAuth();
+  
+  const displayName = session?.user?.user_metadata?.username || "Admin";
+
+  const toggleLanguage = async () => {
+    const newLang = i18n.language === "en" ? "fr" : "en";
+    await i18n.changeLanguage(newLang);
+    await AsyncStorage.setItem("user-language", newLang);
+  };
 
   const paidPayments = payments.filter(p => p.status === "paid");
   const unpaidPayments = payments.filter(p => p.status === "unpaid");
@@ -86,22 +97,32 @@ export default function DashboardScreen() {
     >
       <View style={styles.topBar}>
         <View>
-          <Text style={styles.greeting}>Good morning</Text>
-          <Text style={styles.title}>Dashboard</Text>
+          <Text style={styles.greeting}>{t("welcome")}, {displayName}</Text>
+          <Text style={styles.title}>{t("dashboard")}</Text>
         </View>
-        <Pressable
-          style={({ pressed }) => [styles.logoutBtn, { opacity: pressed ? 0.7 : 1 }]}
-          onPress={logout}
-        >
-          <Feather name="log-out" size={18} color={Colors.textSecondary} />
-        </Pressable>
+        <View style={styles.headerRight}>
+          <Pressable
+            style={({ pressed }) => [styles.logoutBtn, { opacity: pressed ? 0.7 : 1, marginRight: 8 }]}
+            onPress={toggleLanguage}
+          >
+            <Text style={{ fontSize: 14, fontFamily: "Inter_600SemiBold", color: Colors.primary }}>
+              {i18n.language === "en" ? "FR" : "EN"}
+            </Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [styles.logoutBtn, { opacity: pressed ? 0.7 : 1 }]}
+            onPress={logout}
+          >
+            <Feather name="log-out" size={18} color={Colors.textSecondary} />
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.heroCard}>
         <View>
-          <Text style={styles.heroLabel}>Total Revenue</Text>
+          <Text style={styles.heroLabel}>{t("total_revenue")}</Text>
           <Text style={styles.heroValue}>${totalRevenue.toLocaleString()}</Text>
-          <Text style={styles.heroPending}>${pendingAmount.toLocaleString()} pending</Text>
+          <Text style={styles.heroPending}>${pendingAmount.toLocaleString()} {t("pending")}</Text>
         </View>
         <View style={styles.heroIcon}>
           <Ionicons name="analytics" size={36} color="rgba(255,255,255,0.9)" />
@@ -110,7 +131,7 @@ export default function DashboardScreen() {
 
       <View style={styles.statsGrid}>
         <StatCard
-          label="Students"
+          label={t("students")}
           value={students.length}
           icon="people"
           color="#3B82F6"
@@ -118,7 +139,7 @@ export default function DashboardScreen() {
           onPress={() => router.push("/(tabs)/students")}
         />
         <StatCard
-          label="Teachers"
+          label={t("teachers")}
           value={teachers.length}
           icon="school"
           color="#8B5CF6"
@@ -126,7 +147,7 @@ export default function DashboardScreen() {
           onPress={() => router.push("/(tabs)/teachers")}
         />
         <StatCard
-          label="Classes"
+          label={t("classes")}
           value={classes.length}
           icon="library"
           color="#0EA5E9"
@@ -134,7 +155,7 @@ export default function DashboardScreen() {
           onPress={() => router.push("/(tabs)/classes")}
         />
         <StatCard
-          label="Payments"
+          label={t("payments")}
           value={payments.length}
           icon="card"
           color="#10B981"
@@ -144,21 +165,21 @@ export default function DashboardScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Payment Overview</Text>
+        <Text style={styles.sectionTitle}>{t("payment_overview")}</Text>
         <View style={styles.paymentOverview}>
           <View style={styles.paymentStat}>
             <View style={[styles.paymentDot, { backgroundColor: Colors.success }]} />
             <View>
-              <Text style={styles.paymentStatLabel}>Paid</Text>
-              <Text style={styles.paymentStatValue}>{paidPayments.length} records</Text>
+              <Text style={styles.paymentStatLabel}>{t("paid")}</Text>
+              <Text style={styles.paymentStatValue}>{paidPayments.length} {t("records")}</Text>
             </View>
           </View>
           <View style={styles.paymentDivider} />
           <View style={styles.paymentStat}>
             <View style={[styles.paymentDot, { backgroundColor: Colors.warning }]} />
             <View>
-              <Text style={styles.paymentStatLabel}>Pending</Text>
-              <Text style={styles.paymentStatValue}>{unpaidPayments.length} records</Text>
+              <Text style={styles.paymentStatLabel}>{t("pending_status")}</Text>
+              <Text style={styles.paymentStatValue}>{unpaidPayments.length} {t("records")}</Text>
             </View>
           </View>
         </View>
@@ -175,28 +196,28 @@ export default function DashboardScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <Text style={styles.sectionTitle}>{t("quick_actions")}</Text>
         <View style={styles.quickActionsGrid}>
           <QuickAction
-            label="Add Student"
+            label={t("add_student")}
             icon="person-add"
             color="#3B82F6"
             onPress={() => router.push("/student-form")}
           />
           <QuickAction
-            label="Add Teacher"
+            label={t("add_teacher")}
             icon="add-circle"
             color="#8B5CF6"
             onPress={() => router.push("/teacher-form")}
           />
           <QuickAction
-            label="New Class"
+            label={t("new_class")}
             icon="albums"
             color="#0EA5E9"
             onPress={() => router.push("/class-form")}
           />
           <QuickAction
-            label="Record Payment"
+            label={t("record_payment")}
             icon="cash"
             color="#10B981"
             onPress={() => router.push("/payment-form")}
@@ -207,9 +228,9 @@ export default function DashboardScreen() {
       {students.length > 0 && (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent Students</Text>
+            <Text style={styles.sectionTitle}>{t("recent_students")}</Text>
             <Pressable onPress={() => router.push("/(tabs)/students")}>
-              <Text style={styles.seeAll}>See all</Text>
+              <Text style={styles.seeAll}>{t("see_all")}</Text>
             </Pressable>
           </View>
           {students.slice(0, 3).map(student => {
@@ -260,10 +281,11 @@ const styles = StyleSheet.create({
     color: Colors.text,
     marginTop: 2,
   },
+  headerRight: { flexDirection: "row", alignItems: "center" },
   logoutBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     backgroundColor: Colors.surface,
     alignItems: "center",
     justifyContent: "center",
