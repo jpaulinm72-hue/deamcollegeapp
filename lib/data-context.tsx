@@ -282,7 +282,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const deleteStudent = useCallback(async (id: string) => {
-    await supabase.from("students").delete().eq("id", id);
+    const { error } = await supabase.from("students").delete().eq("id", id);
+    if (error) {
+      console.error("Error deleting student:", error.message);
+      throw error;
+    }
     setStudents(prev => prev.filter(s => s.id !== id));
   }, []);
 
@@ -304,7 +308,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const deleteTeacher = useCallback(async (id: string) => {
-    await supabase.from("teachers").delete().eq("id", id);
+    const { error } = await supabase.from("teachers").delete().eq("id", id);
+    if (error) {
+      console.error("Error deleting teacher:", error.message);
+      throw error;
+    }
     setTeachers(prev => prev.filter(t => t.id !== id));
   }, []);
 
@@ -325,7 +333,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const deleteClass = useCallback(async (id: string) => {
-    await supabase.from("classes").delete().eq("id", id);
+    const { error } = await supabase.from("classes").delete().eq("id", id);
+    if (error) {
+      console.error("Error deleting class:", error.message);
+      throw error;
+    }
     setClasses(prev => prev.filter(c => c.id !== id));
   }, []);
 
@@ -346,7 +358,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const deleteGrade = useCallback(async (id: string) => {
-    await supabase.from("grades").delete().eq("id", id);
+    const { error } = await supabase.from("grades").delete().eq("id", id);
+    if (error) {
+      console.error("Error deleting grade:", error.message);
+      throw error;
+    }
     setGrades(prev => prev.filter(g => g.id !== id));
   }, []);
 
@@ -368,7 +384,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const deletePayment = useCallback(async (id: string) => {
-    await supabase.from("payments").delete().eq("id", id);
+    const { error } = await supabase.from("payments").delete().eq("id", id);
+    if (error) {
+      console.error("Error deleting payment:", error.message);
+      throw error;
+    }
     setPayments(prev => prev.filter(p => p.id !== id));
   }, []);
 

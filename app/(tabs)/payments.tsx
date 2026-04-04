@@ -42,17 +42,29 @@ export default function PaymentsScreen() {
   };
 
   const handleDelete = (id: string) => {
-    Alert.alert("Delete Payment", "Remove this payment record?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          await deletePayment(id);
+    const handleAction = async () => {
+      try {
+        await deletePayment(id);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch (error: any) {
+        Alert.alert("Error", error.message || "Failed to delete payment");
+      }
+    };
+
+    if (Platform.OS === "web") {
+      if (confirm("Remove this payment record?")) {
+        handleAction();
+      }
+    } else {
+      Alert.alert("Delete Payment", "Remove this payment record?", [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: handleAction,
         },
-      },
-    ]);
+      ]);
+    }
   };
 
   const topPaddingWeb = Platform.OS === "web" ? 67 : 0;

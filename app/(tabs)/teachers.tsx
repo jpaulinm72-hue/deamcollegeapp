@@ -49,17 +49,29 @@ export default function TeachersScreen() {
   }, [teachers, search]);
 
   const handleDelete = (id: string, name: string) => {
-    Alert.alert("Delete Teacher", `Remove ${name} from staff?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          await deleteTeacher(id);
+    const handleAction = async () => {
+      try {
+        await deleteTeacher(id);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch (error: any) {
+        Alert.alert("Error", error.message || "Failed to delete teacher");
+      }
+    };
+
+    if (Platform.OS === "web") {
+      if (confirm(`Remove ${name} from staff?`)) {
+        handleAction();
+      }
+    } else {
+      Alert.alert("Delete Teacher", `Remove ${name} from staff?`, [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: handleAction,
         },
-      },
-    ]);
+      ]);
+    }
   };
 
   const topPaddingWeb = Platform.OS === "web" ? 67 : 0;

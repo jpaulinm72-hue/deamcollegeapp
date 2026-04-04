@@ -41,17 +41,29 @@ export default function ClassesScreen() {
   const { logout } = useAuth();
 
   const handleDelete = (id: string, name: string) => {
-    Alert.alert("Delete Class", `Delete ${name}?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          await deleteClass(id);
+    const handleAction = async () => {
+      try {
+        await deleteClass(id);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch (error: any) {
+        Alert.alert("Error", error.message || "Failed to delete class");
+      }
+    };
+
+    if (Platform.OS === "web") {
+      if (confirm(`Are you sure you want to delete ${name}?`)) {
+        handleAction();
+      }
+    } else {
+      Alert.alert("Delete Class", `Delete ${name}?`, [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: handleAction,
         },
-      },
-    ]);
+      ]);
+    }
   };
 
   const topPaddingWeb = Platform.OS === "web" ? 67 : 0;

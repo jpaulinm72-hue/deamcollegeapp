@@ -34,21 +34,33 @@ export default function StudentsScreen() {
   }, [students, search, filterClassId]);
 
   const handleDelete = (id: string, name: string) => {
-    Alert.alert(
-      "Delete Student",
-      `Are you sure you want to delete ${name}?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            await deleteStudent(id);
+    const handleAction = async () => {
+      try {
+        await deleteStudent(id);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch (error: any) {
+        Alert.alert("Error", error.message || "Failed to delete student");
+      }
+    };
+
+    if (Platform.OS === "web") {
+      if (confirm(`Are you sure you want to delete ${name}?`)) {
+        handleAction();
+      }
+    } else {
+      Alert.alert(
+        "Delete Student",
+        `Are you sure you want to delete ${name}?`,
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: handleAction,
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const topPaddingWeb = Platform.OS === "web" ? 67 : 0;
